@@ -1,4 +1,4 @@
-// fonction pour créée la card des produit a afficher
+// fonction pour créer la card des produit à afficher
 const createCards = (items) => {
     const itemIndex = document.getElementById('items')
     const itemAHref = document.createElement('a')
