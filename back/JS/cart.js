@@ -109,37 +109,18 @@ const createCards = (item) => {
     }
 }
 
-// fonction pour supprimer un article du panier
-const removeItem = function(item) {
-    let itemsDataStorage = JSON.parse(localStorage.getItem('cart'))
-    let article = document.querySelectorAll('.cart__item')
-    let position = itemsDataStorage.findIndex(element => element.id == item.id && element.colors == item.colors)
-    itemsDataStorage.splice(position, 1)
-    article[position].remove()
-    console.log(itemsDataStorage)
-    localStorage.setItem('cart', JSON.stringify(itemsDataStorage))
-    if(itemsDataStorage.length == 0) {
-        localStorage.clear('')
-        displayCart()
-    }
-}
-
-// fonction pour trouver quel item supprimer au click du bouton deleteItem
-const findItemToRemove = function() {
-    let deleteItem = document.querySelectorAll(".cart__item");
-    let itemsDataStorage = JSON.parse(localStorage.getItem('cart'))
-    deleteItem.forEach(element => element.addEventListener('click', function(e) {
-        let deleteItemBtn = e.target.closest('.deleteItem')
-        if(deleteItemBtn) {
-            let deleteItemId = element.getAttribute("data-id")
-            let deleteItemColor = element.getAttribute("data-color")
-            let findItem = itemsDataStorage.find(element=> element.id == deleteItemId && element.colors == deleteItemColor) 
-            removeItem(findItem)
+// fonction pour modifier la quantité d'un article dans le panier
+const quantityModifier = function() {
+    let inputOfQuantity = document.querySelectorAll(".itemQuantity")
+    let quantityInCart = JSON.parse(localStorage.getItem('cart'));
+    for (let i = 0; i < inputOfQuantity.length; i += 1) {
+        inputOfQuantity[i].addEventListener('input', function() {
+            quantityInCart[i].quantity = parseInt(inputOfQuantity[i].value)
+            localStorage.setItem('cart', JSON.stringify(quantityInCart))
             numberOfItem()
             priceOfCart()
-        }
-    }))
-
+        })
+    }
 }
 
 // fonction pour calculer la quantité d'article
@@ -176,17 +157,67 @@ const priceOfCart= async () => {
     displayPrice.textContent =  totalPrice
 }
 
-// fonction pour modifier la quantité d'un article dans le panier
-const quantityModifier = function() {
-    let inputOfQuantity = document.querySelectorAll(".itemQuantity")
-    let quantityInCart = JSON.parse(localStorage.getItem('cart'));
-    for (let i = 0; i < inputOfQuantity.length; i += 1) {
-        inputOfQuantity[i].addEventListener('input', function() {
-            quantityInCart[i].quantity = parseInt(inputOfQuantity[i].value)
-            localStorage.setItem('cart', JSON.stringify(quantityInCart))
+// fonction pour trouver quel item supprimer au click du bouton deleteItem
+const findItemToRemove = function() {
+    let deleteItem = document.querySelectorAll(".cart__item");
+    let itemsDataStorage = JSON.parse(localStorage.getItem('cart'))
+    deleteItem.forEach(element => element.addEventListener('click', function(e) {
+        let deleteItemBtn = e.target.closest('.deleteItem')
+        if(deleteItemBtn) {
+            let deleteItemId = element.getAttribute("data-id")
+            let deleteItemColor = element.getAttribute("data-color")
+            let findItem = itemsDataStorage.find(element=> element.id == deleteItemId && element.colors == deleteItemColor)
+            removeItem(findItem)
             numberOfItem()
             priceOfCart()
+        }
+    }))
+}
+
+// fonction pour supprimer un article du panier
+const removeItem = function(item) {
+    let itemsDataStorage = JSON.parse(localStorage.getItem('cart'))
+    let article = document.querySelectorAll('.cart__item')
+    let position = itemsDataStorage.findIndex(element => element.id == item.id && element.colors == item.colors)
+    itemsDataStorage.splice(position, 1)
+    article[position].remove()
+    localStorage.setItem('cart', JSON.stringify(itemsDataStorage))
+    if(itemsDataStorage.length == 0) {
+        localStorage.clear('')
+        displayCart()
+    }
+}
+
+// fonction pour vérifier le contenu du formulaire
+const orderForm = function() {
+    let cartOrder = document.getElementById('order')
+    cartOrder.addEventListener('click', function(e) {
+        e.preventDefault();
+        validQuantity()
+        let form = document.querySelector('.cart__order__form')
+        if(validName(form.firstName) == true && validName(form.lastName) == true && validAddress(form.address) == true && validCity(form.city) == true && validEmail(form.email) == true) {
+            sendOrder()
+        }
+    })
+}
+
+// fonction pour envoyer le formulaire
+const sendOrder = async() => {
+    let form = document.querySelector('.cart__order__form')
+    let itemsDataStorage = JSON.parse(localStorage.getItem('cart'));
+    let contact = {
+        firstName: form.firstName.value,
+        lastName: form.lastName.value,
+        address: form.address.value,
+        city: form.city.value,
+        email: form.email.value
+    }
+    let productId = []
+    if (itemsDataStorage) {
+        itemsDataStorage.forEach(item => {
+            productId.push(item.id)
         })
+        sendUserData(contact, productId)
     }
 }
 
@@ -203,35 +234,6 @@ const validQuantity = function () {
     }
 }
 
-// fonction pour vérifier le contenu du formulaire
-const orderForm = function() {
-    let cartOrder = document.getElementById('order')
-    cartOrder.addEventListener('click', function(e) {
-        e.preventDefault();
-        validQuantity()
-        let form = document.querySelector('.cart__order__form')
-        if(validName(form.firstName) == true && validName(form.lastName) == true && validAddress(form.address) == true && validCity(form.city) == true && validEmail(form.email) == true) {
-            let user = {
-                firstName: form.firstName.value,
-                lastName: form.lastName.value,
-                address: form.address.value,
-                city: form.city.value,
-                email: form.email.value
-            }
-            let itemsDataStorage = JSON.parse(localStorage.getItem('cart'));
-            let userCart = []
-            if (itemsDataStorage) {
-                itemsDataStorage.forEach(item => {
-                    userCart.push(item.id)
-                })
-            }
-            console.log(user)
-            console.log(userCart)
-            sendUserData(user, userCart)
-        }
-    })
-}
-
 // fonction pour valider le nom /  prénom
 const validName = function(input) {
     let InputRegExp = new RegExp('^[A-Za-z ]+$')
@@ -239,6 +241,7 @@ const validName = function(input) {
     let errorMsg = input.nextElementSibling;
     if (testRegExp == false) {
         errorMsg.textContent = 'invalide'
+        return false
     } else {
         errorMsg.textContent = ''
         return true
@@ -252,6 +255,7 @@ const validAddress = function(input) {
     let errorMsg = input.nextElementSibling;
     if (testRegExp == false) {
         errorMsg.textContent = 'invalide'
+        return false
     } else {
         errorMsg.textContent = ''
         return true
@@ -260,11 +264,12 @@ const validAddress = function(input) {
 
 // fonction pour valider la ville
 const validCity = function(input) {
-    let InputRegExp = new RegExp('^[A-Z][A-Z{1} a-z-]+$')
+    let InputRegExp = new RegExp('^[A-Za-z- ]+$')
     let testRegExp = InputRegExp.test(input.value)
     let errorMsg = input.nextElementSibling;
     if (testRegExp == false) {
         errorMsg.textContent = 'invalide'
+        return false
     } else {
         errorMsg.textContent = ''
         return true
@@ -278,13 +283,9 @@ const validEmail = function(input) {
     let errorMsg = input.nextElementSibling;
     if (testRegExp == false) {
         errorMsg.textContent = 'invalide'
+        return false
     } else {
         errorMsg.textContent = ''
         return true
     }
 }
-
-
-/////// reste a faire ///////
-
-// fonction pour envoyer le formulaire
