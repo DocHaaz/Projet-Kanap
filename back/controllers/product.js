@@ -46,9 +46,7 @@ exports.getOneProduct = (req, res, next) => {
  * products: [string] <-- array of product _id
  *
  */
-
 exports.orderProducts = (req, res, next) => {
-  console.log(req)
   if (!req.body.contact ||
       !req.body.contact.firstName ||
       !req.body.contact.lastName ||

@@ -2,6 +2,14 @@
 let params = new URLSearchParams(window.location.search)
 let itemId = params.get('id');
 
+// fonction pour afficher l'article au chargement
+const product = async () => {
+    const itemData = await getItemDataId()
+
+    createCards(itemData)
+    colorChosen(itemData)
+}
+product()
 
 // fonction pour créer la card d'un article à afficher
 const createCards = (item) => {
@@ -32,15 +40,6 @@ const colorChosen = (item) => {
     });
     
 }
-
-// fonction pour afficher l'article au chargement
-const product = async () => {
-    const itemData = await getItemDataId()
-
-    createCards(itemData)
-    colorChosen(itemData)
-}
-product()
 
 // fonction pour ajouter un article au panier au click du bouton addToCart
 addToCart.addEventListener('click', function() {
